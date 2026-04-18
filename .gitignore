@@ -1,0 +1,6 @@
+docker/
+*txt
+*ipynb
+stream_server.py
+datagram_server.py
+*.pdf
