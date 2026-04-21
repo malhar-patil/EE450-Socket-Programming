@@ -11,6 +11,19 @@ UDP_PORT = 25860
 TCP_PORT = 26860
 BACKLOG = 5
 
+def get_list_of_doctors():
+    list_of_doctors = ""
+    with open("hospital.txt", "rt") as file:
+        for line in file:
+            doctor_information = line.strip().split(" ")
+            if(doctor_information[0] == "[Treatments]"):
+                break
+            if(len(doctor_information) == 2 and doctor_information[0].startswith("Dr.")):
+                list_of_doctors = list_of_doctors + " " + doctor_information[0]
+    return list_of_doctors
+            
+
+
 def validate_user_credentials_as_doctor(user_credentials):
     user_credentials = user_credentials.split(":")
     with open ("hospital.txt", "rt") as file:
@@ -72,9 +85,18 @@ def main():
                     new_fd, addr = tcp_sock.accept()
                     user_credentials = new_fd.recv(1024).decode()
                     client_sock = new_fd
+                    sockets.append(client_sock)
 
                     print(f"Hospital Server received an authentication request from a user with hash suffix: {user_credentials.split(':')[0][-5:]}.")
-                    validate_user_credentials(user_credentials, udp_sock)
+                    validate_user_credentials(user_credentials, udp_sock)   
+                
+                elif sock is client_sock:
+                    data = client_sock.recv(1024).decode()
+                    command_list = data.strip().split(" ")
+                    if(len(command_list) == 1 and command_list[0] == "lookup"):
+                        client_sock.sendall(get_list_of_doctors().encode())
+                        
+
 
                 
     except KeyboardInterrupt:
