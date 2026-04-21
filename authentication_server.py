@@ -21,8 +21,6 @@ def validate_user_credentials(user_credentials, udp_sock, addr):
     print(f"Authentication failed for a user with hash suffix: {user_credentials[0][-5:]}.")
     udp_sock.sendto("AUTH_FAIL".encode(), addr)
 
-    print(f"The Authentication Server has sent the authentication result to the Hospital Server.")
-
 def main():
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -37,6 +35,7 @@ def main():
             print(f"Authentication Server has received an authentication request for a user with hash suffix: {user_credentials.split(':')[0][-5:]}.")
 
             validate_user_credentials(user_credentials, udp_sock, addr)
+            print(f"The Authentication Server has sent the authentication result to the Hospital Server.")
     except KeyboardInterrupt:
         udp_sock.close()
 

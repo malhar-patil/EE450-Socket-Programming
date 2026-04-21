@@ -15,23 +15,26 @@ def validate_user_credentials_as_doctor(user_credentials):
     user_credentials = user_credentials.split(":")
     with open ("hospital.txt", "rt") as file:
         for line in file:
-            doctor_information = line.split(" ")
-            if len(doctor_information) == 0:
-                break
-            elif len(doctor_information) == 1:
+            doctor_information = line.strip().split(" ")
+            if len(doctor_information) == 1:
                 continue
             if user_credentials[0] == doctor_information[1]:
-                print(f"User with hash suffix {user_credentials[-5:]} will be granted doctor access.")
-                return
+                print(f"User with hash suffix {user_credentials[0][-5:]} will be granted doctor access.")
+                return "DOCTOR"
     
     print(f"User with hash {user_credentials[0][-5:]} will be granted patient access.")
+    return "PATIENT"
             
 
 
-def get_user_access(authentication_response, user_credentials):
+def get_user_access(authentication_response, user_credentials, client_sock):
     if authentication_response == "AUTH_SUCCESS":
-        print(f"User with a hash suffix {user_credentials.split(':')[0][-5:]} has been access to the system. Determining the access of the user.")
-        validate_user_credentials_as_doctor(user_credentials)
+        print(f"User with a hash suffix {user_credentials.split(':')[0][-5:]} has been granted access to the system. Determining the access of the user.")
+        user = validate_user_credentials_as_doctor(user_credentials)
+        client_sock.sendall(user.encode())
+    else:
+        client_sock.sendall("AUTH_FAIL".encode())
+    print(f"Hospital Server has sent the response from Authentication Server to the client using TCP over port {TCP_PORT}.")
 
     
 
@@ -50,8 +53,9 @@ def main():
     tcp_sock.bind((HOST, TCP_PORT))
     tcp_sock.listen(5)
 
-    print(f"Hospital Services up and running using UDP on port {UDP_PORT}.")
+    print(f"Hospital Server is up and running using UDP on port {UDP_PORT}.")
     user_credentials = None
+    client_sock = None
     try:
         sockets = [udp_sock, tcp_sock]
         while True:
@@ -62,14 +66,14 @@ def main():
 
                     authentication_response = data.decode()
                     print(f"Hospital server has received the response from the authentication server using UDP over port {UDP_PORT}.")
-                    get_user_access(authentication_response, user_credentials)
+                    get_user_access(authentication_response, user_credentials, client_sock)
 
                 elif sock is tcp_sock:
                     new_fd, addr = tcp_sock.accept()
-                    
                     user_credentials = new_fd.recv(1024).decode()
+                    client_sock = new_fd
 
-                    print(f"Hospital Server received an authentication requet from a with hash suffix: {user_credentials.split(':')[0][-5:]}.")
+                    print(f"Hospital Server received an authentication request from a user with hash suffix: {user_credentials.split(':')[0][-5:]}.")
                     validate_user_credentials(user_credentials, udp_sock)
 
                 

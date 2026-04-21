@@ -23,6 +23,7 @@ def main():
     user_credentials = (f"{username}:{password}")
 
     tcp_sock.sendall(user_credentials.encode())
+    user = tcp_sock.recv(1024).decode()
 
 
     try:
