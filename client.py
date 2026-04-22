@@ -52,11 +52,25 @@ def main():
             if(len(command_list) == 1 and command_list[0] == "lookup"):
                 print(f"{username} sent a lookup request to the hospital server")
                 tcp_sock.sendall("LOOKUP|lookup".encode())
-                # Add "fetching doctor list response"
                 list_of_doctors = tcp_sock.recv(1024).decode().strip().split(" ")
                 print(f"The client received the response from the hospital server using TCP over port {client_port}.\nThe Following doctors are available: ")
                 for doctor in list_of_doctors:
                     print(f"{doctor}")
+            
+            elif(len(command_list) == 2 and command_list[0] == "lookup" and command_list[1].startswith("Dr.")):
+                print(f"Patient {username} sent a lookup request to the hospital server for {command_list[1]}.")
+                tcp_sock.sendall((f"LOOKUP_DR|{command_list[1]}").encode())
+                available_timeslots = tcp_sock.recv(1024).decode().strip().split(" ")
+                if len(available_timeslots) == 9:
+                    print(f"The client received the response from the hospital server using TCP over port {client_port}. All time blocks are available for {command_list[1]}.")
+                elif len(available_timeslots) == 1:
+                    print(f"The client received the response from the Hospital Server using TCP over port {client_port}. {command_list[1]} has no time slots available.")
+                else:
+                    print(f"The client received the response from the Hospital Server using TCP over port {client_port}.\n{command_list[1]} is available at times: ")
+                    for slot in available_timeslots:
+                        print(f"{slot}")
+
+
                 
     except KeyboardInterrupt:
         tcp_sock.close()

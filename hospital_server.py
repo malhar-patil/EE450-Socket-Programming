@@ -11,19 +11,6 @@ UDP_PORT = 25860
 TCP_PORT = 26860
 BACKLOG = 5
 
-# def get_list_of_doctors():
-#     list_of_doctors = ""
-#     with open("hospital.txt", "rt") as file:
-#         for line in file:
-#             doctor_information = line.strip().split(" ")
-#             if(doctor_information[0] == "[Treatments]"):
-#                 break
-#             if(len(doctor_information) == 2 and doctor_information[0].startswith("Dr.")):
-#                 list_of_doctors = list_of_doctors + " " + doctor_information[0]
-#     return list_of_doctors
-            
-
-
 def validate_user_credentials_as_doctor(user_credentials):
     user_credentials = user_credentials.split(":")
     with open ("hospital.txt", "rt") as file:
@@ -88,9 +75,15 @@ def main():
                         get_user_access(response, user_credentials, client_sock)
                     
                     elif addr[1] == 23860:
-                        print(f"Hospital Server has received the response from Appointment Server using UDP over port {UDP_PORT}.")
-                        client_sock.sendall(response.encode())
-                        print(f"Hospital Server has sent the doctor lookup to the client.")
+                        command_type, _, payload = response.partition("|")
+                        if command_type == "LOOKUP":
+                            print(f"Hospital Server has received the response from Appointment Server using UDP over port {UDP_PORT}.")
+                            client_sock.sendall(payload.encode())
+                            print(f"Hospital Server has sent the doctor lookup to the client.")
+                        elif command_type == "LOOKUP_DR":
+                            print(f"Hospital Server has received the response from Appointment Server using UDP over port {UDP_PORT}.")
+                            client_sock.sendall(payload.encode())
+                            print(f"The Hospital Server has sent the response to the client.")
 
                 elif sock is tcp_sock:
                     new_fd, addr = tcp_sock.accept()
@@ -105,10 +98,17 @@ def main():
                     data = client_sock.recv(1024).decode()
                     command_type, _, payload = data.partition("|")
 
-                    if(command_type == "LOOKUP" and payload == "lookup"):
+                    if(command_type == "LOOKUP"):
                         print(f"Hospital Server received a lookup request from a user with a hash suffix {user_credentials.split(':')[0][-5:]} over port {TCP_PORT}.")
-                        udp_sock.sendto(payload.encode(), ("127.0.0.1", 23860))
+                        udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
                         print(f"Hospital Server sent the doctor lookup request to the Appointment server.")
+                    elif(command_type == "LOOKUP_DR"):
+                        print(f"Hospital Server has received a lookup request from a user with hash suffix {user_credentials.split(':')[0][-5:]} to lookup {payload} availability using TCP over port {TCP_PORT}.")
+                        udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
+                        print(f"Hospital Server sent the doctor lookup request to the Appointment server.")
+                    
+                        
+
 
                         
 
