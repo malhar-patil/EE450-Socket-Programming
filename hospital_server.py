@@ -91,7 +91,7 @@ def main():
                     client_sock = new_fd
                     sockets.append(client_sock)
 
-                    print(f"Hospital Server received an authentication request from a user with hash suffix: {user_credentials.split(':')[0][-5:]}.")
+                    print(f"Hospital Server received an authentication request from a user with hash suffix {user_credentials.split(':')[0][-5:]}.")
                     validate_user_credentials(user_credentials, udp_sock)   
                 
                 elif sock is client_sock:

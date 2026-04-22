@@ -5,7 +5,9 @@ import sys
 HOST = "127.0.0.1"
 UDP_PORT = 23860
 
+# get list of available doctors
 def get_available_doctors():
+
     available = ["LOOKUP|"]
     current_doctor = None
     has_free_slot = False
@@ -29,9 +31,12 @@ def get_available_doctors():
 
     return " ".join(available)
 
+# get available time slots of a doctor
 def get_available_time_slots(doctor):
+    
     available = ["LOOKUP_DR|"]
     total_time_slots = 8
+    is_doctor_present = False
 
     with open("appointments.txt", "rt") as file:
         for line in file:
@@ -49,10 +54,11 @@ def get_available_time_slots(doctor):
     if(len(available) == 9):
         print(f"All time blocks are available for {doctor}.")
     elif(len(available) == 1):
+        available.append("NO_SLOT")
         print(f"{doctor} has no time slots available.")
     else:
         print(f"{doctor} has some time slots available.")
-    print(available)
+
     return " ".join(available)
 
 

@@ -61,9 +61,9 @@ def main():
                 print(f"Patient {username} sent a lookup request to the hospital server for {command_list[1]}.")
                 tcp_sock.sendall((f"LOOKUP_DR|{command_list[1]}").encode())
                 available_timeslots = tcp_sock.recv(1024).decode().strip().split(" ")
-                if len(available_timeslots) == 9:
+                if len(available_timeslots) == 8:
                     print(f"The client received the response from the hospital server using TCP over port {client_port}. All time blocks are available for {command_list[1]}.")
-                elif len(available_timeslots) == 1:
+                elif len(available_timeslots) == 1 and available_timeslots[0] == "NO_SLOT":
                     print(f"The client received the response from the Hospital Server using TCP over port {client_port}. {command_list[1]} has no time slots available.")
                 else:
                     print(f"The client received the response from the Hospital Server using TCP over port {client_port}.\n{command_list[1]} is available at times: ")
