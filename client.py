@@ -69,9 +69,23 @@ def main():
                     print(f"The client received the response from the Hospital Server using TCP over port {client_port}.\n{command_list[1]} is available at times: ")
                     for slot in available_timeslots:
                         print(f"{slot}")
+            
+            elif(len(command_list) == 4 and command_list[0] == "schedule"):
+                tcp_sock.sendall((f"SCHEDULE|{command_list[1]} {command_list[2]} {command_list[3]}").encode())
+                print(f"{username} sent an appointment schedule request to the hospital server.")
+                schedule_result = tcp_sock.recv(1024).decode().strip().split(" ")
 
+                if len(schedule_result) == 1 and schedule_result[0] == "APPOINTMENT_SCHEDULED_SUCCESSFULLY":
+                    print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nAn appointment has been successfully scheduled for patient {username} with {command_list[1]} at {command_list[2]}.")
+                elif len(schedule_result) == 1 and schedule_result[0] == "INCORRECT_INPUT_FORMAT":
+                    print(f"INCORRECT INPUT FORMAT FOR SCHEDULE COMMAND.")
+                elif len(schedule_result) == 1 and schedule_result[0] == "NO_SLOT":
+                    print(f"The client received the response from the hospital server using TCP over port {client_port}\nUnable to schedule an appointment with {command_list[1]} at this time, as all time blocks have been taken up.") 
+                elif len(schedule_result) > 1 and len(schedule_result)<9:
+                    print(f"The client received the response from the hospital server using TCP over port {client_port}\nUnable to schedule an appointment with {command_list[1]} at {command_list[2]}.\nOther available time blocks are ")
+                    for time_slot in schedule_result:
+                        print(time_slot) 
 
-                
     except KeyboardInterrupt:
         tcp_sock.close()
 
