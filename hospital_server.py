@@ -92,6 +92,10 @@ def main():
                             print(f"Hospital Server has received the response from the appointment server using UDP over port {UDP_PORT}.")
                             client_sock.sendall(payload.encode())
                             print(f"The hospital server has sent the response to the client.")
+                        elif command_type == "VIEW_APPOINTMENT_DR":
+                            print(f"Hospital server has received the response from the Appointment server using UDP over port {UDP_PORT}.")
+                            client_sock.sendall(payload.encode())
+                            print(f"The hospital server has sent the response to the client.")
 
                 elif sock is tcp_sock:
                     new_fd, addr = tcp_sock.accept()
@@ -124,6 +128,10 @@ def main():
                         data = data + " " + user_credentials.split(':')[0]
                         udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
                         print(f"Hospital Server has sent the view appointments request to the Appointment Server.")
+                    elif(command_type == "VIEW_APPOINTMENT_DR"):
+                        print(f"Hospital Server has received a view appointments request from {payload.rstrip().split(' ')[1]} to view their schedule details using TCP over port {TCP_PORT}.")
+                        udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
+                        print(f"The hospital server has sent the view appointments request to the Appointment Server.")
 
                     
                         

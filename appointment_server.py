@@ -155,7 +155,32 @@ def view_appointment(username_hash):
     print(f"The user with hash suffix {username_hash[-5:]} has no appointment in the system.")
     return " ".join(result)
 
+def view_appointment_doctor(doctor_name):
+    result = ["VIEW_APPOINTMENT_DR|"]
+    has_appointment = False
+    is_doctor_present = False
+    total_time_slots = 8
 
+    with open("appointments.txt", "rt") as file:
+        for line in file:
+            if(line.startswith(doctor_name)):
+                is_doctor_present = True
+                continue
+
+            if is_doctor_present:
+                appointment_info = line.split(" ")
+                if(len(appointment_info) == 3):
+                    has_appointment = True
+                    result.append(appointment_info[0])
+                total_time_slots -= 1       
+    
+    if not has_appointment:
+        result.append("NO_APPOINTMENT_FOUND")
+        print(f"No appointments have been made for {doctor_name}.")
+        return " ".join(result)
+    print(f"Returning the scheduled appointments for {doctor_name}.")
+    return " ".join(result)
+                
 def main():
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -186,6 +211,11 @@ def main():
                 username_hash = payload.strip().split(" ")[1]
                 print(f"Appointment Server has received a view appointment command for the user with hash suffix {username_hash[-5:]}.")
                 result = view_appointment(username_hash)
+                udp_sock.sendto(result.encode(), addr)
+            elif command_type == "VIEW_APPOINTMENT_DR":
+                doctor_name = payload.rstrip().split(" ")[1]
+                print(f"Appointment Server has received a request to view appointments scheduled for {doctor_name}.")
+                result = view_appointment_doctor(doctor_name)
                 udp_sock.sendto(result.encode(), addr)
 
 
