@@ -85,6 +85,15 @@ def main():
                     print(f"The client received the response from the hospital server using TCP over port {client_port}\nUnable to schedule an appointment with {command_list[1]} at {command_list[2]}.\nOther available time blocks are ")
                     for time_slot in schedule_result:
                         print(time_slot) 
+            
+            elif(len(command_list) == 1 and command_list[0] == "view_appointment"):
+                print(f"{username} sent a request to view their appointment to the Hospital Server.")
+                tcp_sock.sendall((f"VIEW_APPOINTMENT|view_appointment").encode())
+                appointment_result = tcp_sock.recv(1024).decode().strip().replace("\n", "").split(" ")
+                if(len(appointment_result) == 2):
+                    print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou have an appointment scheduled with {appointment_result[0]} at {appointment_result[1]}")
+                else:
+                    print(f"The client received the response from the hospital server using TCP over client port {client_port}\nYou do not have an appointment today.")
 
     except KeyboardInterrupt:
         tcp_sock.close()

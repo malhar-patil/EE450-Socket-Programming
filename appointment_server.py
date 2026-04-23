@@ -135,6 +135,25 @@ def schedule_appointment(schedule_arguments):
 
     return " ".join(available_slots)
 
+def view_appointment(username_hash):
+    result = ["VIEW_APPOINTMENT|"]
+    doctor = None
+    with open("appointments.txt", "rt") as file:
+        for line in file:
+            if(line.startswith("Dr")):
+                doctor = line
+                continue
+
+            appointment_info = line.strip().split(" ")
+            if(len(appointment_info) == 3 and appointment_info[1] == username_hash):
+                result.append(doctor)
+                result.append(appointment_info[0])
+                print(f"Returning details regarding the appointment for the user with hash suffix {username_hash[-5:]}.")
+                return " ".join(result)
+    
+    result.append("NO_APPOINTMENT_FOUND")
+    print(f"The user with hash suffix {username_hash[-5:]} has no appointment in the system.")
+    return " ".join(result)
 
 
 def main():
@@ -163,7 +182,11 @@ def main():
                 print(f"Appointment scheduling request received (time: {schedule_arguments[1]}, doctor: {schedule_arguments[0]}, patient hash suffix: {schedule_arguments[3][-5:]}, illness: {schedule_arguments[2]}).")
                 result = schedule_appointment(schedule_arguments)
                 udp_sock.sendto(result.encode(), addr)
-
+            elif command_type == "VIEW_APPOINTMENT":
+                username_hash = payload.strip().split(" ")[1]
+                print(f"Appointment Server has received a view appointment command for the user with hash suffix {username_hash[-5:]}.")
+                result = view_appointment(username_hash)
+                udp_sock.sendto(result.encode(), addr)
 
 
                 
