@@ -98,6 +98,16 @@ def main():
                         print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou have an appointment scheduled with {appointment_result[0]} at {appointment_result[1]}")
                     else:
                         print(f"The client received the response from the hospital server using TCP over client port {client_port}\nYou do not have an appointment today.")
+                
+                elif(len(command_list) ==1 and command_list[0] == "cancel"):
+                    print(f"{username} sent a cancellation request to the Hospital Server.")
+                    tcp_sock.sendall((f"CANCEL|cancel").encode())
+                    cancel_result = tcp_sock.recv(1024).decode().strip().replace("\n", "").split(" ")
+                    if len(cancel_result) == 1 and cancel_result[0] == "NO_APPOINTMENT_FOUND":
+                        print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nYou have no appointments available to cancel.")
+                    else:
+                        print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nYou have successfully cancelled your appointment with {cancel_result[1]} at {cancel_result[2]}")
+
             
             elif user_status == "DOCTOR":
                 if(len(command_list) == 1 and command_list[0] == "view_appointments"):

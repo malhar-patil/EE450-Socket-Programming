@@ -96,6 +96,10 @@ def main():
                             print(f"Hospital server has received the response from the Appointment server using UDP over port {UDP_PORT}.")
                             client_sock.sendall(payload.encode())
                             print(f"The hospital server has sent the response to the client.")
+                        elif command_type == "CANCEL":
+                            print(f"Hospital Server has received the response from Appointment Server using UDP over port {UDP_PORT}.")
+                            client_sock.sendall(payload.encode())
+                            print(f"The hospital server has sent the response to the client.")
 
                 elif sock is tcp_sock:
                     new_fd, addr = tcp_sock.accept()
@@ -132,6 +136,12 @@ def main():
                         print(f"Hospital Server has received a view appointments request from {payload.rstrip().split(' ')[1]} to view their schedule details using TCP over port {TCP_PORT}.")
                         udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
                         print(f"The hospital server has sent the view appointments request to the Appointment Server.")
+                    elif(command_type == "CANCEL"):
+                        print(f"Hospital Server has received a cancel request from user with hash suffix: {user_credentials.split(':')[0][-5:]} to cancel their appointment using TCP over port {TCP_PORT}.")
+                        data = data +" "+user_credentials.split(":")[0]
+                        udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
+                        print(f"The hospital server has sent the cancel request to the appointment server.")
+
 
                     
                         

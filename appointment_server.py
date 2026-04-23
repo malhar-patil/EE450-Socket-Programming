@@ -180,7 +180,34 @@ def view_appointment_doctor(doctor_name):
         return " ".join(result)
     print(f"Returning the scheduled appointments for {doctor_name}.")
     return " ".join(result)
-                
+
+def cancel_appointment(username):
+    result = ["CANCEL|"]
+    doctor = None
+    with open("appointments.txt", "rt") as file:
+        lines = file.readlines()
+    
+    for i, line in enumerate(lines):
+        if(line.startswith("Dr.")):
+            doctor = line.strip()
+            continue
+        appointment_info = line.strip().replace("\n", "").split(" ")
+        if len(appointment_info) == 3 and appointment_info[1] == username:
+            lines[i] = f"{appointment_info[0]}\n"
+            result.append(doctor)
+            result.append(appointment_info[0])
+            with open("appointments.txt", "wt") as file:
+                file.writelines(lines)
+            print(f"Successfully cancelled appointment.")
+            return " ".join(result)
+        
+    with open("appointments.txt", "wt") as file:
+        file.writelines(lines)
+    result.append("NO_APPOINTMENT_FOUND") 
+    print(f"Error: Failed to find appointment.")
+    return " ".join(result)
+
+
 def main():
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -216,6 +243,11 @@ def main():
                 doctor_name = payload.rstrip().split(" ")[1]
                 print(f"Appointment Server has received a request to view appointments scheduled for {doctor_name}.")
                 result = view_appointment_doctor(doctor_name)
+                udp_sock.sendto(result.encode(), addr)
+            elif command_type == "CANCEL":
+                username = payload.rstrip().split(" ")[1]
+                print(f"Appointment Server has received a cancel appointment command for the user with hash suffix: {username[-5:]}.")
+                result = cancel_appointment(username)
                 udp_sock.sendto(result.encode(), addr)
 
 
