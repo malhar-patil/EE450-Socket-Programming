@@ -90,7 +90,7 @@ def main():
                         for time_slot in schedule_result:
                             print(time_slot) 
                 
-                elif(len(command_list) == 1 and command_list[0] == "view_appointments"):
+                elif(len(command_list) == 1 and command_list[0] == "view_appointment"):
                     print(f"{username} sent a request to view their appointment to the Hospital Server.")
                     tcp_sock.sendall((f"VIEW_APPOINTMENT|view_appointment").encode())
                     appointment_result = tcp_sock.recv(1024).decode().strip().replace("\n", "").split(" ")
@@ -106,7 +106,7 @@ def main():
                     if len(cancel_result) == 1 and cancel_result[0] == "NO_APPOINTMENT_FOUND":
                         print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nYou have no appointments available to cancel.")
                     else:
-                        print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nYou have successfully cancelled your appointment with {cancel_result[1]} at {cancel_result[2]}")
+                        print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nYou have successfully cancelled your appointment with {cancel_result[0]} at {cancel_result[1]}")
 
             
             elif user_status == "DOCTOR":
