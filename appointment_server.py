@@ -163,6 +163,8 @@ def view_appointment_doctor(doctor_name):
 
     with open("appointments.txt", "rt") as file:
         for line in file:
+            if(total_time_slots <= 0):
+                break
             if(line.startswith(doctor_name)):
                 is_doctor_present = True
                 continue
@@ -172,7 +174,8 @@ def view_appointment_doctor(doctor_name):
                 if(len(appointment_info) == 3):
                     has_appointment = True
                     result.append(appointment_info[0])
-                total_time_slots -= 1       
+                total_time_slots -= 1  
+                 
     
     if not has_appointment:
         result.append("NO_APPOINTMENT_FOUND")

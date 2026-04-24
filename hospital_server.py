@@ -57,8 +57,9 @@ def main():
 
     print(f"Hospital Server is up and running using UDP on port {UDP_PORT}.")
     # Save user information
-    user_credentials = None
-    client_sock = None
+    clients = {}
+    auth_pending = []
+    appt_pending = []
 
     try:
         sockets = [udp_sock, tcp_sock]
@@ -71,11 +72,14 @@ def main():
                     response = data.decode()
 
                     if addr[1] == 21860:
+                        client_sock = auth_pending.pop(0)
+                        creds = clients[client_sock]
                         print(f"Hospital server has received the response from the authentication server using UDP over port {UDP_PORT}.")
-                        get_user_access(response, user_credentials, client_sock)
+                        get_user_access(response, creds, client_sock)
                     
                     elif addr[1] == 23860:
                         command_type, _, payload = response.partition("|")
+                        client_sock = appt_pending.pop(0)
                         if command_type == "LOOKUP":
                             print(f"Hospital Server has received the response from Appointment Server using UDP over port {UDP_PORT}.")
                             client_sock.sendall(payload.encode())
@@ -103,41 +107,50 @@ def main():
 
                 elif sock is tcp_sock:
                     new_fd, addr = tcp_sock.accept()
-                    user_credentials = new_fd.recv(1024).decode()
-                    client_sock = new_fd
-                    sockets.append(client_sock)
+                    creds = new_fd.recv(1024).decode()
+                    clients[new_fd] = creds
+                    auth_pending.append(new_fd)
+                    sockets.append(new_fd)
 
-                    print(f"Hospital Server received an authentication request from a user with hash suffix {user_credentials.split(':')[0][-5:]}.")
-                    validate_user_credentials(user_credentials, udp_sock)   
+                    print(f"Hospital Server received an authentication request from a user with hash suffix {creds.split(':')[0][-5:]}.")
+                    validate_user_credentials(creds, udp_sock)   
                 
-                elif sock is client_sock:
+                elif sock in clients:
+                    client_sock = sock
+                    user_credentials = clients[client_sock]
                     data = client_sock.recv(1024).decode()
                     command_type, _, payload = data.partition("|")
 
                     if(command_type == "LOOKUP"):
                         print(f"Hospital Server received a lookup request from a user with a hash suffix {user_credentials.split(':')[0][-5:]} over port {TCP_PORT}.")
+                        appt_pending.append(client_sock)
                         udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
                         print(f"Hospital Server sent the doctor lookup request to the Appointment server.")
                     elif(command_type == "LOOKUP_DR"):
                         print(f"Hospital Server has received a lookup request from a user with hash suffix {user_credentials.split(':')[0][-5:]} to lookup {payload} availability using TCP over port {TCP_PORT}.")
+                        appt_pending.append(client_sock)
                         udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
                         print(f"Hospital Server sent the doctor lookup request to the Appointment server.")
                     elif(command_type == "SCHEDULE"):
                         print(f"Hospital Server has received a schedule request from a user with hash suffix: {user_credentials.split(':')[0][-5:]} to book an appointment using TCP over port {TCP_PORT}.")
+                        appt_pending.append(client_sock)
                         data = data + " " + user_credentials.split(':')[0]
                         udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
                         print(f"Hospital Server has sent the schedule request to the appointment server.")
                     elif(command_type == "VIEW_APPOINTMENT"):
                         print(f"Hospital server has received a view appointment request from a user with hash suffix {user_credentials.split(':')[0][-5:]} to view their appointment details using TCP over port {TCP_PORT}.")
+                        appt_pending.append(client_sock)
                         data = data + " " + user_credentials.split(':')[0]
                         udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
                         print(f"Hospital Server has sent the view appointments request to the Appointment Server.")
                     elif(command_type == "VIEW_APPOINTMENT_DR"):
                         print(f"Hospital Server has received a view appointments request from {payload.rstrip().split(' ')[1]} to view their schedule details using TCP over port {TCP_PORT}.")
+                        appt_pending.append(client_sock)
                         udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
                         print(f"The hospital server has sent the view appointments request to the Appointment Server.")
                     elif(command_type == "CANCEL"):
                         print(f"Hospital Server has received a cancel request from user with hash suffix: {user_credentials.split(':')[0][-5:]} to cancel their appointment using TCP over port {TCP_PORT}.")
+                        appt_pending.append(client_sock)
                         data = data +" "+user_credentials.split(":")[0]
                         udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
                         print(f"The hospital server has sent the cancel request to the appointment server.")
