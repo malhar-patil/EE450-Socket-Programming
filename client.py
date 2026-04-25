@@ -107,6 +107,17 @@ def main():
                         print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nYou have no appointments available to cancel.")
                     else:
                         print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nYou have successfully cancelled your appointment with {cancel_result[0]} at {cancel_result[1]}")
+                elif(len(command_list) == 1 and command_list[0] == "view_prescription"):
+                    print(f"{username} sent a request to view their prescription to the Hospital Server")
+                    tcp_sock.sendall(f"VIEW_PRESCRIPTION| {username_hash}".encode())
+                    prescription_details = tcp_sock.recv(1024).decode().strip().replace("\n", "").split(" ")
+                    if(len(prescription_details) == 1 and prescription_details[0] == "NO_PRESCRIPTION_RECORD_FOUND"):
+                        print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou do not have a prescription to look up.")
+                    elif(len(prescription_details) == 3 and prescription_details[1] == "None"):
+                        print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou were not prescribed any treatment by {prescription_details[2]} following your diagnosis.")
+                    elif(len(prescription_details) == 3):
+                        print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou have been prescribed {prescription_details[0]}, to be taken {prescription_details[1]}, by {prescription_details[2]}")
+                    
 
             
             elif user_status == "DOCTOR":
