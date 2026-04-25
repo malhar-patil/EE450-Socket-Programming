@@ -99,7 +99,7 @@ def main():
                     else:
                         print(f"The client received the response from the hospital server using TCP over client port {client_port}\nYou do not have an appointment today.")
                 
-                elif(len(command_list) ==1 and command_list[0] == "cancel"):
+                elif(len(command_list) == 1 and command_list[0] == "cancel"):
                     print(f"{username} sent a cancellation request to the Hospital Server.")
                     tcp_sock.sendall((f"CANCEL|cancel").encode())
                     cancel_result = tcp_sock.recv(1024).decode().strip().replace("\n", "").split(" ")
@@ -121,6 +121,12 @@ def main():
                         print(f"The client received the response from the hospital server using TCP over port {client_port}\n{username} is scheduled at times:")
                         for time_slot in schedule_result:
                             print(time_slot)
+                
+                elif(len(command_list) == 3 and command_list[0] == "prescribe"):
+                    print(f"{username} sent a request to the Hospital Server to prescribe {command_list[1]} following their diagnosis.")
+                    tcp_sock.sendall((f"PRESCRIBE| {username} {sha256_hash(command_list[1])} {command_list[2]}").encode())
+                    treatment, frequency = tcp_sock.recv(1024).decode().strip().replace("\n", "").split(" ")
+                    print(f"The client received the response from the hospital server using TCP over port {client_port}.\nYou have successfully prescribed {command_list[1]} with {treatment}, to be taken {frequency}.")
 
 
 

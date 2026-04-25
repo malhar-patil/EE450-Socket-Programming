@@ -42,6 +42,25 @@ def validate_user_credentials(user_credentials, udp_sock):
     udp_sock.sendto(user_credentials.encode(), (AUTHENTICATION_SERVER_ADDRESS, AUTHENTICATION_SERVER_PORT))
     print(f"Hospital Server has sent an authentication request to the Authentication Server.")
 
+def acquire_illness_treatment(appt_response, udp_sock):
+    appt_response_list = ["PRESCRIBE|"]
+    appt_response_list.extend(appt_response.strip().split(" "))
+    illness = appt_response_list[3]
+
+    with open("hospital.txt", "rt") as file:
+        for line in file:
+            line_data = line.rstrip().split(" ")
+            if len(line_data) == 2 and line_data[0] == illness:
+                appt_response_list.append(line_data[1])
+                break
+    
+    udp_sock.sendto(" ".join(appt_response_list).encode(), ("127.0.0.1", 22860))
+    print(f"Hospital server has sent the prescription request to the prescription server to prescribe {appt_response_list[len(appt_response_list)-1]}.")
+
+    
+
+    
+
 def main():
 
     # Define UDP socket
@@ -60,6 +79,7 @@ def main():
     clients = {}
     auth_pending = []
     appt_pending = []
+    pres_pending = []
 
     try:
         sockets = [udp_sock, tcp_sock]
@@ -102,6 +122,19 @@ def main():
                             print(f"The hospital server has sent the response to the client.")
                         elif command_type == "CANCEL":
                             print(f"Hospital Server has received the response from Appointment Server using UDP over port {UDP_PORT}.")
+                            client_sock.sendall(payload.encode())
+                            print(f"The hospital server has sent the response to the client.")
+                        elif command_type == "PRESCRIBE":
+                            print(f"Hospital Server has received the illness response from the Appointment server using UDP over port {UDP_PORT}.")
+                            illness = payload.strip().split(" ")[2]
+                            pres_pending.append(client_sock)
+                            print(f"Acquiring treatment for {illness} from the database.")
+                            acquire_illness_treatment(payload, udp_sock)
+                    elif addr[1] == 22860:
+                        command_type, _, payload = response.partition("|")
+                        if command_type == "PRESCRIBE_SAVE":
+                            client_sock = pres_pending.pop(0)
+                            print(f"Hospital server has received the response from the prescription server using UDP over port {UDP_PORT}")
                             client_sock.sendall(payload.encode())
                             print(f"The hospital server has sent the response to the client.")
 
@@ -154,6 +187,14 @@ def main():
                         data = data +" "+user_credentials.split(":")[0]
                         udp_sock.sendto(data.encode(), ("127.0.0.1", 23860))
                         print(f"The hospital server has sent the cancel request to the appointment server.")
+                    elif(command_type == "PRESCRIBE"):
+                        print(f"Hospital Server has received a prescription request from {payload.strip().split(' ')[0]} for a user with hash suffix {payload.strip().split(' ')[1][-5:]} using TCP over port {TCP_PORT}.")
+                        appt_pending.append(client_sock)
+                        udp_sock.sendto(data.encode(), ('127.0.0.1', 23860))
+                        print(f"Hospital Server has sent a request to fetch patients with hash suffix {payload.strip().split(' ')[1][-5:]} illness information to the Appointment Server.”")
+
+
+
 
 
                     

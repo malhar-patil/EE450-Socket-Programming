@@ -210,6 +210,28 @@ def cancel_appointment(username):
     print(f"Error: Failed to find appointment.")
     return " ".join(result)
 
+def find_patient_entry(prescribe_arguments):
+    lines = None
+    with open("appointments.txt", "rt") as file:
+        lines = file.readlines()
+
+    illness_from_appts = ""
+    for i, line in enumerate(lines):
+        line_data = line.rstrip().split(" ")
+
+        if(len(line_data) == 3 and line_data[1] == prescribe_arguments[1]):
+            print(f"Sending back the requested information to the Hospital server.")
+            illness_from_appts = line_data[2]
+            lines[i] = f"{line_data[0]}\n"
+            print(f"Successfully removed {prescribe_arguments[1][-5:]} appointment slot, {line_data[0]} is now free to be scheduled for tomorrow.")
+            break
+
+    with open ("appointments.txt", "wt") as file:
+        file.writelines(lines)
+
+    return illness_from_appts
+
+
 
 def main():
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -252,6 +274,12 @@ def main():
                 print(f"Appointment Server has received a cancel appointment command for the user with hash suffix: {username[-5:]}.")
                 result = cancel_appointment(username)
                 udp_sock.sendto(result.encode(), addr)
+            elif command_type == "PRESCRIBE":
+                prescribe_arguments = payload.strip().replace("\n","").split(" ")
+                print(f"Appointment Server has received a request from Hospital Server regarding information about a user with hash suffix {prescribe_arguments[1][-5:]} from {prescribe_arguments[0]}.")
+                illness_from_appts = find_patient_entry(prescribe_arguments)
+                reply = f"PRESCRIBE| {prescribe_arguments[0]} {prescribe_arguments[1]} {illness_from_appts} {prescribe_arguments[2]}"
+                udp_sock.sendto(reply.encode(), addr)
 
 
                 
