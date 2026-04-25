@@ -117,6 +117,8 @@ def main():
                         print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou were not prescribed any treatment by {prescription_details[2]} following your diagnosis.")
                     elif(len(prescription_details) == 3):
                         print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou have been prescribed {prescription_details[0]}, to be taken {prescription_details[1]}, by {prescription_details[2]}")
+                elif(len(command_list) == 1 and command_list[0] == "help"):
+                    print(f"Please enter the command:\n<lookup>,\n<lookup <doctor>>,\n<schedule <doctor> <start_time> <illness>>,\n<cancel>,\n<view_appointment>,\n<view_prescription>,\n<quit>\n")
                     
 
             
@@ -148,6 +150,9 @@ def main():
                        print(f"The client received the response from the hospital server using TCP over port {client_port}\n{command_list[1]} does not have a prescription.") 
                     else:
                         print(f"The client received the response from the hospital server using TCP over port {client_port}\n{command_list[1]} has been prescribed {prescription_details[0]}, to be taken {prescription_details[1]}, by {prescription_details[2]}.")
+
+                elif(len(command_list) == 1 and command_list[0] == "help"):
+                    print(f"Please enter the command:\n<view_appointments>,\n<prescribe <patient> <frequency>>,\n<view_prescription <patient>>,\n<quit>\n")
                     
 
 
