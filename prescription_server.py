@@ -16,6 +16,21 @@ def save_treatment_details(payload):
     with open("prescriptions.txt", "wt") as file:
         file.writelines("\n".join(lines))
 
+def check_prescription_record(patient_hash):
+    result = ["VIEW_PRESCRIPTION_DR|"]
+    with open("prescriptions.txt", "rt") as file:
+        for line in file:
+            prescription_details = line.replace("\n","").strip().split(" ")
+            if len(prescription_details) == 4 and prescription_details[1] == patient_hash:
+                result.append(prescription_details[2])
+                result.append(prescription_details[3])
+                result.append(prescription_details[0])
+                print(f"A prescription exists for this user.")
+                return " ".join(result)
+    
+    result.append("NO_PRESCRIPTION_RECORD_FOUND")
+    print(f"There are no current prescriptions for this user.")
+    return " ".join(result)
 
 def main():
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -34,6 +49,11 @@ def main():
                 save_treatment_details(payload)
                 udp_sock.sendto((f"PRESCRIBE_SAVE| {payload.strip().split(' ')[4]} {payload.strip().split(' ')[3]}").encode(), addr)
                 print(f"Successfully saved the prescription details for user with hash suffix: {payload.strip().split(' ')[1][-5:]}.")
+            
+            elif command_type == "VIEW_PRESCRIPTION_DR":
+                print(f"The prescription server has received a request to view the prescription for the user with hash suffix: {payload.strip().split(' ')[1][-5:]}.")
+                result = check_prescription_record(payload.strip().split(" ")[1])
+                udp_sock.sendto(result.encode(), addr)
     except KeyboardInterrupt:
         udp_sock.close()
 

@@ -137,6 +137,12 @@ def main():
                             print(f"Hospital server has received the response from the prescription server using UDP over port {UDP_PORT}")
                             client_sock.sendall(payload.encode())
                             print(f"The hospital server has sent the response to the client.")
+                        
+                        elif command_type == "VIEW_PRESCRIPTION_DR":
+                            client_sock = pres_pending.pop(0)
+                            print(f"Hospital server has received the response from the prescription server using UDP over port {UDP_PORT}.")
+                            client_sock.sendall(payload.encode())
+                            print(f"Hospital server has sent the response to the client.")
 
                 elif sock is tcp_sock:
                     new_fd, addr = tcp_sock.accept()
@@ -192,6 +198,11 @@ def main():
                         appt_pending.append(client_sock)
                         udp_sock.sendto(data.encode(), ('127.0.0.1', 23860))
                         print(f"Hospital Server has sent a request to fetch patients with hash suffix {payload.strip().split(' ')[1][-5:]} illness information to the Appointment Server.”")
+                    elif(command_type == "VIEW_PRESCRIPTION_DR"):
+                        print(f"Hospital Server has received a prescription request from {payload.strip().split(' ')[0]} to view a patient with hash suffix {payload.strip().split(' ')[1][-5:]} prescription details using TCP over port {TCP_PORT}.")
+                        pres_pending.append(client_sock)
+                        udp_sock.sendto(data.encode(), ('127.0.0.1', 22860))
+                        print(f"Hospital Server has sent the prescription request to the Prescription Server.")
 
 
 

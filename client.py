@@ -128,6 +128,17 @@ def main():
                     treatment, frequency = tcp_sock.recv(1024).decode().strip().replace("\n", "").split(" ")
                     print(f"The client received the response from the hospital server using TCP over port {client_port}.\nYou have successfully prescribed {command_list[1]} with {treatment}, to be taken {frequency}.")
 
+                elif(len(command_list) == 2 and command_list[0] == "view_prescription"):
+                    print(f"{username} sent a request to view {command_list[1]} prescription to the Hospital Server.")
+                    payload = f"VIEW_PRESCRIPTION_DR| {username} {sha256_hash(command_list[1])}"
+                    tcp_sock.sendall(payload.encode())
+                    prescription_details = tcp_sock.recv(1024).decode().strip().replace("\n", "").split(" ")
+                    if(len(prescription_details) == 1 and prescription_details[0] == "NO_PRESCRIPTION_RECORD_FOUND"):
+                       print(f"The client received the response from the hospital server using TCP over port {client_port}\n{command_list[1]} does not have a prescription.") 
+                    else:
+                        print(f"The client received the response from the hospital server using TCP over port {client_port}\n{command_list[1]} has been prescribed {prescription_details[0]}, to be taken {prescription_details[1]}, by {prescription_details[2]}.")
+                    
+
 
 
     except KeyboardInterrupt:
