@@ -6,3 +6,5 @@ datagram_server.py
 *.pdf
 CLAUDE.md
 EE450-Project-Spring26.md
+issues.md
+.claude/

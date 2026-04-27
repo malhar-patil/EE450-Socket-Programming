@@ -52,12 +52,19 @@ def main():
             command = input()
             command_list = command.strip().split(" ")
 
+            if user_status == "PATIENT" or user_status == "DOCTOR":
+                if(len(command_list) == 1 and command_list[0] == "quit"):
+                    print(f"You have successfully been logged out.\n——Quit Program——")
+                    tcp_sock.close()
+                    sys.exit(0)
+                    
+
             if user_status == "PATIENT":
                 if(len(command_list) == 1 and command_list[0] == "lookup"):
-                    print(f"{username} sent a lookup request to the hospital server")
+                    print(f"{username} sent a lookup request to the hospital server.")
                     tcp_sock.sendall("LOOKUP|lookup".encode())
                     list_of_doctors = tcp_sock.recv(1024).decode().strip().split(" ")
-                    print(f"The client received the response from the hospital server using TCP over port {client_port}.\nThe Following doctors are available: ")
+                    print(f"The client received the response from the hospital server using TCP over port {client_port}.\nThe following doctors are available: ")
                     for doctor in list_of_doctors:
                         print(f"{doctor}")
                 
@@ -95,7 +102,7 @@ def main():
                     tcp_sock.sendall((f"VIEW_APPOINTMENT|view_appointment").encode())
                     appointment_result = tcp_sock.recv(1024).decode().strip().replace("\n", "").split(" ")
                     if(len(appointment_result) == 2):
-                        print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou have an appointment scheduled with {appointment_result[0]} at {appointment_result[1]}")
+                        print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou have an appointment scheduled with {appointment_result[0]} at {appointment_result[1]}.")
                     else:
                         print(f"The client received the response from the hospital server using TCP over client port {client_port}\nYou do not have an appointment today.")
                 
@@ -106,9 +113,9 @@ def main():
                     if len(cancel_result) == 1 and cancel_result[0] == "NO_APPOINTMENT_FOUND":
                         print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nYou have no appointments available to cancel.")
                     else:
-                        print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nYou have successfully cancelled your appointment with {cancel_result[0]} at {cancel_result[1]}")
+                        print(f"The client received the response from the Hospital Server using TCP over port {client_port}\nYou have successfully cancelled your appointment with {cancel_result[0]} at {cancel_result[1]}.")
                 elif(len(command_list) == 1 and command_list[0] == "view_prescription"):
-                    print(f"{username} sent a request to view their prescription to the Hospital Server")
+                    print(f"{username} sent a request to view their prescription to the Hospital Server.")
                     tcp_sock.sendall(f"VIEW_PRESCRIPTION| {username_hash}".encode())
                     prescription_details = tcp_sock.recv(1024).decode().strip().replace("\n", "").split(" ")
                     if(len(prescription_details) == 1 and prescription_details[0] == "NO_PRESCRIPTION_RECORD_FOUND"):
@@ -116,7 +123,7 @@ def main():
                     elif(len(prescription_details) == 3 and prescription_details[1] == "None"):
                         print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou were not prescribed any treatment by {prescription_details[2]} following your diagnosis.")
                     elif(len(prescription_details) == 3):
-                        print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou have been prescribed {prescription_details[0]}, to be taken {prescription_details[1]}, by {prescription_details[2]}")
+                        print(f"The client received the response from the hospital server using TCP over port {client_port}\nYou have been prescribed {prescription_details[0]}, to be taken {prescription_details[1]}, by {prescription_details[2]}.")
                 elif(len(command_list) == 1 and command_list[0] == "help"):
                     print(f"Please enter the command:\n<lookup>,\n<lookup <doctor>>,\n<schedule <doctor> <start_time> <illness>>,\n<cancel>,\n<view_appointment>,\n<view_prescription>,\n<quit>\n")
                     

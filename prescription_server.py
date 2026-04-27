@@ -21,7 +21,7 @@ def check_prescription_record(patient_hash):
     with open("prescriptions.txt", "rt") as file:
         for line in file:
             prescription_details = line.replace("\n","").strip().split(" ")
-            if len(prescription_details) == 4 and prescription_details[1] == patient_hash and prescription_details[3] != "None":
+            if len(prescription_details) == 4 and prescription_details[1] == patient_hash:
                 result.append(prescription_details[2])
                 result.append(prescription_details[3])
                 result.append(prescription_details[0])
