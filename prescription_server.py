@@ -5,6 +5,7 @@ import sys
 HOST = "127.0.0.1"
 UDP_PORT = 22860
 
+# save treatment details given by doctor following their recent appointment with a patient
 def save_treatment_details(payload):
     lines =None
     treatment_details = payload.strip().split(" ")
@@ -16,6 +17,7 @@ def save_treatment_details(payload):
     with open("prescriptions.txt", "wt") as file:
         file.writelines("\n".join(lines))
 
+# check prescription record for request made by doctor
 def check_prescription_record(patient_hash):
     result = ["VIEW_PRESCRIPTION_DR|"]
     with open("prescriptions.txt", "rt") as file:
@@ -32,6 +34,7 @@ def check_prescription_record(patient_hash):
     print(f"There are no current prescriptions for this user.")
     return " ".join(result)
 
+# check prescription record for request made by patient
 def get_prescription_record(patient_hash):
     result = ["VIEW_PRESCRIPTION|"]
     with open("prescriptions.txt", "rt") as file:
@@ -52,6 +55,7 @@ def get_prescription_record(patient_hash):
     return " ".join(result)
 
 def main():
+    # Define UDP socket
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     udp_sock.bind((HOST, UDP_PORT))
@@ -60,27 +64,32 @@ def main():
 
     try:
         while True:
+            # data contains actual payload and addr contains address and port information
             data, addr = udp_sock.recvfrom(1024)
             command_type, _ , payload = data.decode().partition("|")
 
+            # request/response for prescribe server made by hospital server 
             if command_type == "PRESCRIBE":
                 print(f"Prescription Server has received a request from {payload.strip().split(' ')[0]} to prescribe the user with hash suffix {payload.strip().split(' ')[1][-5:]}.")
                 save_treatment_details(payload)
                 udp_sock.sendto((f"PRESCRIBE_SAVE| {payload.strip().split(' ')[4]} {payload.strip().split(' ')[3]}").encode(), addr)
                 print(f"Successfully saved the prescription details for user with hash suffix: {payload.strip().split(' ')[1][-5:]}.")
             
+            # request/response to view prescription (for doctor) made by hospital server
             elif command_type == "VIEW_PRESCRIPTION_DR":
                 print(f"The prescription server has received a request to view the prescription for the user with hash suffix: {payload.strip().split(' ')[1][-5:]}.")
                 result = check_prescription_record(payload.strip().split(" ")[1])
                 udp_sock.sendto(result.encode(), addr)
             
+            # request/response to view prescription (for patient) made by hospital server
             elif command_type == "VIEW_PRESCRIPTION":
                 print(f"The prescription server has received a request to view the prescription for the user with hash suffix: {payload.strip().split(' ')[0][-5:]}.")
                 result = get_prescription_record(payload.strip().split(" ")[0])
                 udp_sock.sendto(result.encode(), addr)
+    
+    # keyboard interrupt for ctrl+c check        
     except KeyboardInterrupt:
         udp_sock.close()
-
 
 if __name__ == "__main__":
     main()
