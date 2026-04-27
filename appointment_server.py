@@ -20,9 +20,11 @@ def get_available_doctors():
                     available.append(current_doctor)
                 current_doctor = None
                 has_free_slot = False
+
             elif line.startswith("Dr."):
                 current_doctor = line
                 has_free_slot = False
+
             elif len(line.split()) == 1:
                 has_free_slot = True
 
@@ -40,15 +42,20 @@ def get_available_time_slots(doctor):
 
     with open("appointments.txt", "rt") as file:
         for line in file:
+
             line  = line.strip()
+
             if(total_time_slots == 0):
                 break
+
             if(line.startswith(doctor)):
                 is_doctor_present = True
                 continue
+            
             if(is_doctor_present and len(line.split()) == 1):
                 available.append(line)
                 total_time_slots-=1
+
             elif(is_doctor_present and len(line.split()) != 1):
                 total_time_slots-=1
  
@@ -63,15 +70,17 @@ def get_available_time_slots(doctor):
 
     return " ".join(available)
 
+# check input format of time slot entered by user
 def check_input_format(schedule_argument):
     hour, minute = schedule_argument[1].split(":")
     hour = int(hour)
     minute = int(minute)
+
     if not ((hour >= 9 and hour <=16) and minute == 0):
         return False
     return True
 
-# schedule appointment
+# schedule appointment for a patient
 def schedule_appointment(schedule_arguments):
     available_slots = ["SCHEDULE|"]
     if not check_input_format(schedule_arguments):
@@ -87,9 +96,12 @@ def schedule_appointment(schedule_arguments):
         lines = file.readlines()
     
     for i, line in enumerate(lines):
+
         line = line.strip()
+
         if total_time_slots == 0:
             break
+
         if line == schedule_arguments[0]:
             is_doctor_present = True
             continue
@@ -117,12 +129,15 @@ def schedule_appointment(schedule_arguments):
                 line  = line.strip()
                 if(total_time_slots == 0):
                     break
+
                 if(line.startswith(schedule_arguments[0])):
                     is_doctor_present = True
                     continue
+
                 if(is_doctor_present and len(line.split()) == 1):
                     available_slots.append(line)
                     total_time_slots-=1
+
                 elif (is_doctor_present and len(line.split()) != 1):
                     total_time_slots-=1
                 
@@ -135,6 +150,7 @@ def schedule_appointment(schedule_arguments):
 
     return " ".join(available_slots)
 
+# check appointment information for patient
 def view_appointment(username_hash):
     result = ["VIEW_APPOINTMENT|"]
     doctor = None
@@ -155,6 +171,7 @@ def view_appointment(username_hash):
     print(f"The user with hash suffix {username_hash[-5:]} has no appointment in the system.")
     return " ".join(result)
 
+# check for timeslots a doctor has appointments
 def view_appointment_doctor(doctor_name):
     result = ["VIEW_APPOINTMENT_DR|"]
     has_appointment = False
@@ -184,6 +201,7 @@ def view_appointment_doctor(doctor_name):
     print(f"Returning the scheduled appointments for {doctor_name}.")
     return " ".join(result)
 
+# cancel a scheduled appointment for a patient
 def cancel_appointment(username):
     result = ["CANCEL|"]
     doctor = None
@@ -210,7 +228,9 @@ def cancel_appointment(username):
     print(f"Error: Failed to find appointment.")
     return " ".join(result)
 
+# find patient entry in appointment txt file to get their illness
 def find_patient_entry(prescribe_arguments):
+
     lines = None
     with open("appointments.txt", "rt") as file:
         lines = file.readlines()
@@ -242,52 +262,65 @@ def main():
 
     try:
         while True:
+
+            # data contains actual payload and addr contains address and port information
             data, addr = udp_sock.recvfrom(1024)
             command_type,_, payload = data.decode().partition("|")
+
+            # request/response for lookup request received from hospital server
             if command_type == "LOOKUP":
                 print(f"The Appointment Server has received a doctor availability request.")
                 result = get_available_doctors()
                 udp_sock.sendto(result.encode(), addr)
                 print(f"The Appointment Server has sent the lookup result to the Hospital Server.")
+            
+            # request/response for lookup request (for doctor) received from hospital server 
             elif command_type == "LOOKUP_DR":
                 print(f"The Appointment Server has received a doctor availability request.")
                 result = get_available_time_slots(payload)
                 udp_sock.sendto(result.encode(), addr)
                 print(f"The Appointment Server has sent the lookup result to the Hospital Server.")
+            
+            # request/response for schedule request received from hospital server
             elif command_type == "SCHEDULE":
                 schedule_arguments = payload.split(" ")
                 print(f"Appointment scheduling request received (time: {schedule_arguments[1]}, doctor: {schedule_arguments[0]}, patient hash suffix: {schedule_arguments[3][-5:]}, illness: {schedule_arguments[2]}).")
                 result = schedule_appointment(schedule_arguments)
                 udp_sock.sendto(result.encode(), addr)
+            
+            # request/response for view_appointment request received from hospital server
             elif command_type == "VIEW_APPOINTMENT":
                 username_hash = payload.strip().split(" ")[1]
                 print(f"Appointment Server has received a view appointment command for the user with hash suffix {username_hash[-5:]}.")
                 result = view_appointment(username_hash)
                 udp_sock.sendto(result.encode(), addr)
+            
+            # request/response for view appointment (for docotr) received from hospital server
             elif command_type == "VIEW_APPOINTMENT_DR":
                 doctor_name = payload.rstrip().split(" ")[1]
                 print(f"Appointment Server has received a request to view appointments scheduled for {doctor_name}.")
                 result = view_appointment_doctor(doctor_name)
                 udp_sock.sendto(result.encode(), addr)
+            
+            # request/response for cancel appointment received from hospital server
             elif command_type == "CANCEL":
                 username = payload.rstrip().split(" ")[1]
                 print(f"Appointment Server has received a cancel appointment command for the user with hash suffix: {username[-5:]}.")
                 result = cancel_appointment(username)
                 udp_sock.sendto(result.encode(), addr)
+            
+            # request/response for prescribe appointment received from hospital server
             elif command_type == "PRESCRIBE":
                 prescribe_arguments = payload.strip().replace("\n","").split(" ")
                 print(f"Appointment Server has received a request from Hospital Server regarding information about a user with hash suffix {prescribe_arguments[1][-5:]} from {prescribe_arguments[0]}.")
                 illness_from_appts = find_patient_entry(prescribe_arguments)
                 reply = f"PRESCRIBE| {prescribe_arguments[0]} {prescribe_arguments[1]} {illness_from_appts} {prescribe_arguments[2]}"
                 udp_sock.sendto(reply.encode(), addr)
-
-
-                
-
+            
+    # keyboard interrupt for ctrl+c check        
     except KeyboardInterrupt:
         udp_sock.close()
-
-
+        
 if __name__ == "__main__":
     main()
     
