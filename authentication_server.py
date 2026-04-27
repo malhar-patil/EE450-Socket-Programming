@@ -22,6 +22,8 @@ def validate_user_credentials(user_credentials, udp_sock, addr):
     udp_sock.sendto("AUTH_FAIL".encode(), addr)
 
 def main():
+
+    # Define UDP socket
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     udp_sock.bind((HOST, UDP_PORT))
@@ -29,16 +31,21 @@ def main():
     print(f"Authentication Server is up and running using UDP on port {UDP_PORT}.")
 
     try:
+
         while True:
+            # data contains actual payload and addr contains address and port information
             data, addr = udp_sock.recvfrom(1024)
             user_credentials = data.decode()
-            print(f"Authentication Server has received an authentication request for a user with hash suffix: {user_credentials.split(':')[0][-5:]}.")
 
+            print(f"Authentication Server has received an authentication request for a user with hash suffix: {user_credentials.split(':')[0][-5:]}.")
+            
+            # check user credentials
             validate_user_credentials(user_credentials, udp_sock, addr)
+
             print(f"The Authentication Server has sent the authentication result to the Hospital Server.")
+    # keyboard interrupt for ctrl+c check        
     except KeyboardInterrupt:
         udp_sock.close()
-
 
 if __name__ == "__main__":
     main()
