@@ -37,18 +37,41 @@ active client connections at once. No threads or `fork()` are used.
 - `appointments.txt` — per-doctor timeslots, with patient hash and illness when booked
 - `prescriptions.txt` — saved prescription records
 
-## Running
+## Setup
 
-Pure Python, standard library only — no build step. Open a separate terminal for each
-process and start them in this order:
+This project is meant to run inside the CSCI 104 Docker container, which provides the
+standard Ubuntu environment used for grading. Set up Docker and the `ch` container helper
+by following the instructions here: https://github.com/csci104/docker/
+
+Once installed, start the container and open a shell into it:
 
 ```bash
-python authentication_server.py
-python prescription_server.py
-python appointment_server.py
-python hospital_server.py
-python client.py <username> <password>
+ch start csci104
+ch shell csci104
 ```
+
+Inside the shell, navigate to this project's directory (mounted from your host machine) and
+run the code from there. Exit the shell with `Ctrl+D`, and stop the container when done:
+
+```bash
+ch stop csci104
+```
+
+## Running
+
+Pure Python, standard library only — no build step. Inside the container shell, open a
+separate terminal for each process (`ch shell csci104` in each) and start them in this
+order:
+
+```bash
+python3 authentication_server.py
+python3 prescription_server.py
+python3 appointment_server.py
+python3 hospital_server.py
+python3 client.py '<username>' '<password>'
+```
+
+Enclose the username and password in single quotes.
 
 ## Notes
 
