@@ -1,10 +1,11 @@
 docker/
+ee450_patil_malhar/
+.claude/
 *txt
 *ipynb
 stream_server.py
 datagram_server.py
-*.pdf
 CLAUDE.md
 EE450-Project-Spring26.md
 issues.md
-.claude/
+Makefile
