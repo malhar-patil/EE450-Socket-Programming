@@ -30,10 +30,11 @@ The hospital server uses `select()` to multiplex its UDP socket, TCP listener, a
 
 ## Data Files
 
-- `users.txt` — space-separated `<username_hash> <password_hash>` per line
-- `hospital.txt` — `[Doctors]` and `[Treatments]` sections
-- `appointments.txt` — per-doctor timeslots, with patient hash and illness when booked
-- `prescriptions.txt` — saved prescription records
+- `users.txt` - space-separated `<username_hash> <password_hash>` per line
+- `hospital.txt` - `[Doctors]` and `[Treatments]` sections
+- `appointments.txt` - per-doctor timeslots, with patient hash and illness when booked
+- `prescriptions.txt` - saved prescription records
+- `original.txt` - plaintext <username> <password> credentials that users.txt is derived from (SHA-256 hashed). For reference only; not used at runtime.
 
 ## Setup
 
@@ -54,6 +55,7 @@ run the code from there. Exit the shell with `Ctrl+D`, and stop the container wh
 ```bash
 ch stop csci104
 ```
+>**Note:** The servers read and write the data files from their own working directory, so all .txt files must sit in the same folder as the .py files. Copy the files out of data/ into the project directory before running (or run the programs from wherever the data files live).
 
 ## Running
 Inside the container shell, open a separate terminal for each process (`ch shell csci104` in each) and start them in this order:
